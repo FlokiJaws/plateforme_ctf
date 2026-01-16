@@ -1,0 +1,47 @@
+# ============================================
+# GITIGNORE POUR LE PROJET CTF
+# ============================================
+
+# Environnement
+.env
+.env.local
+.env.*.local
+
+# Base de données
+data/
+*.db
+*.mv.db
+*.trace.db
+postgres_data/
+
+# Backend (Gradle + Quarkus)
+backend/.gradle/
+backend/build/
+backend/gradle/
+backend/.gradletasknamecache
+backend/bin/
+
+# Frontend (Node + Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+
+# OS
+Thumbs.db

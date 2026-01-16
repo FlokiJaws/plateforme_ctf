@@ -1,0 +1,50 @@
+# Gradle
+.gradle/
+build/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Plugin directory
+/.quarkus/cli/plugins/
+# TLS Certificates
+.certs/
+
+01-Intro (2).pdf
+02-Servlets (1).pdf
+03-WS-REST (1).pdf
+04-EJB (1).pdf
+05-CDI (1).pdf
+06-REACT (1).pdf
+
+projet-2025-2026.pdf

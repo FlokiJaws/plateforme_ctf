@@ -1,0 +1,1105 @@
+openapi: 3.1.0
+
+info:
+  title: CTFs Root-You
+  description: APIs
+  version: 1.0.0
+
+servers:
+  - url: "http://localhost:8080"
+
+tags:
+  - name: Auth
+    description: Authentification & inscriptions
+  - name: CTFs
+    description: Gestion des CTFs
+  - name: Comments
+    description: Gestion des commentaires
+  - name: Users
+    description: Administration & consultation des utilisateurs
+  - name: Participants
+    description: Espace participant (self)
+  - name: Equipes
+    description: Gestion des équipes
+
+paths:
+  ## =========================================================
+  ## AUTHENTICATION
+  ## =========================================================
+  /auth/register/participant:
+    post:
+      tags: [Auth]
+      summary: "Inscription participant"
+      description: "Crée un compte participant."
+      operationId: "registerParticipant"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterParticipantRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/RegisterParticipantRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /auth/register/organisateur:
+    post:
+      tags: [Auth]
+      summary: "Inscription organisateur"
+      description: "Crée un compte organisateur."
+      operationId: "registerOrganisateur"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterOrganisateurRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/RegisterOrganisateurRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /auth/register/admin:
+    post:
+      tags: [Auth]
+      summary: "Inscription administrateur"
+      description: "Crée un compte administrateur."
+      operationId: "registerAdmin"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterAdministrateurRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/RegisterAdministrateurRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: "Connexion"
+      description: "Authentifie un utilisateur."
+      operationId: "login"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## CTF
+  ## =========================================================
+  /ctfs/request_creation:
+    post:
+      tags: [CTFs]
+      summary: "Demander la création d'un CTF"
+      description: "Soumet une demande de création de CTF."
+      operationId: "requestCreationCtf"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CtfCreateRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/CtfCreateRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}:
+    get:
+      tags: [CTFs]
+      summary: "Détails d'un CTF"
+      description: "Récupère les informations d'un CTF par son identifiant."
+      operationId: "getCtfById"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/list/actif:
+    get:
+      tags: [CTFs]
+      summary: "Lister les CTFs actifs"
+      description: "Retourne la liste des CTFs actifs."
+      operationId: "getAllValidCtfs"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/list/en_attente:
+    get:
+      tags: [CTFs]
+      summary: "Lister les CTFs en attente"
+      description: "Retourne la liste des CTFs en attente."
+      operationId: "getAllPendingCtfs"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/list/inactif:
+    get:
+      tags: [CTFs]
+      summary: "Lister les CTFs inactifs"
+      description: "Retourne la liste des CTFs inactifs."
+      operationId: "getAllRefusedCtfs"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/validation:
+    post:
+      tags: [CTFs]
+      summary: "Valider un CTF"
+      description: "Valide ou refuse un CTF (admin)."
+      operationId: "validationCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidationCtfRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/ValidationCtfRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/disable:
+    patch:
+      tags: [CTFs]
+      summary: "Désactiver un CTF"
+      description: "Passe un CTF en inactif."
+      operationId: "disableCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/modify:
+    patch:
+      tags: [CTFs]
+      summary: "Modifier un CTF"
+      description: "Modifie un CTF existant."
+      operationId: "modifyCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCtfRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/UpdateCtfRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/join:
+    post:
+      tags: [CTFs]
+      summary: "Rejoindre un CTF"
+      description: "Enregistre la participation du participant au CTF."
+      operationId: "joinCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/leave:
+    post:
+      tags: [CTFs]
+      summary: "Quitter un CTF"
+      description: "Désinscrit le participant du CTF."
+      operationId: "leaveCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /ctfs/{id}/participations:
+    get:
+      tags: [CTFs]
+      summary: "Participations d'un CTF"
+      description: "Retourne les participations d'un CTF avec un filtre."
+      operationId: "getCtfParticipations"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "filter"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            default: "ALL"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## COMMENTS
+  ## =========================================================
+  /comments/new/{ctfId}:
+    post:
+      tags: [Comments]
+      summary: "Ajouter un commentaire"
+      description: "Ajoute un commentaire sur un CTF."
+      operationId: "addCommentToCtf"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "ctfId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+          "*/*":
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /comments/ctf/{ctfId}:
+    get:
+      tags: [Comments]
+      summary: "Lister les commentaires d'un CTF"
+      description: "Retourne les commentaires associés à un CTF."
+      operationId: "getCommentsForCtf"
+      parameters:
+        - name: "ctfId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /comments/user/{userEmail}:
+    get:
+      tags: [Comments]
+      summary: "Lister les commentaires d'un utilisateur"
+      description: "Retourne les commentaires associés à un utilisateur."
+      operationId: "getCommentsForUser"
+      parameters:
+        - name: "userEmail"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## USERS
+  ## =========================================================
+  /users/ban:
+    post:
+      tags: [Users]
+      summary: "Bannir un utilisateur"
+      description: "Bannit un utilisateur (admin)."
+      operationId: "banUser"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUserRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /users/getall/admin:
+    get:
+      tags: [Users]
+      summary: "Lister tous les utilisateurs (admin)"
+      description: "Retourne tous les utilisateurs (vue admin)."
+      operationId: "getAllUsersForAdmin"
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /users/getall/participants:
+    get:
+      tags: [Users]
+      summary: "Lister les participants (public)"
+      description: "Retourne les utilisateurs visibles côté public."
+      operationId: "getAllUsersForPublic"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /users/getall/organisateurs:
+    get:
+      tags: [Users]
+      summary: "GET users/getall/organisateurs"
+      description: "Retourne tous les organisateurs."
+      operationId: "getAllOrganisateurs"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## PARTICIPANTS
+  ## =========================================================
+  /participants/me/participations:
+    get:
+      tags: [Participants]
+      summary: "Mes participations"
+      description: "Retourne les participations du participant connecté, avec filtre."
+      operationId: "getMyParticipations"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "filter"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            default: "ALL"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## EQUIPES
+  ## =========================================================
+  /equipes/new:
+    post:
+      tags: [Equipes]
+      summary: "Créer une équipe"
+      description: "Crée une nouvelle équipe."
+      operationId: "createEquipe"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipeCreateRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/request:
+    post:
+      tags: [Equipes]
+      summary: "Demander à rejoindre une équipe"
+      description: "Soumet une demande d'adhésion à une équipe."
+      operationId: "joinEquipe"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "equipeId"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/respond_to_request:
+    post:
+      tags: [Equipes]
+      summary: "Répondre à une demande"
+      description: "Accepte ou refuse une demande d'adhésion."
+      operationId: "respondToRequest"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CandidatureDecisionRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/leave:
+    post:
+      tags: [Equipes]
+      summary: "Quitter une équipe"
+      description: "Quitte une équipe."
+      operationId: "leaveEquipe"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "equipeId"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/kick:
+    post:
+      tags: [Equipes]
+      summary: "Exclure un membre"
+      description: "Exclut un membre d'une équipe."
+      operationId: "kickMembre"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KickMembreRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/designate_new_chef:
+    post:
+      tags: [Equipes]
+      summary: "Désigner un nouveau chef"
+      description: "Change le chef d'équipe."
+      operationId: "designateNewChef"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewChefEquipeRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/all:
+    get:
+      tags: [Equipes]
+      summary: "Lister les équipes"
+      description: "Retourne la liste de toutes les équipes."
+      operationId: "getAllEquipes"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/{equipeId}:
+    get:
+      tags: [Equipes]
+      summary: "Récupérer une équipe par ID"
+      description: "Retourne les informations d'une équipe par son identifiant."
+      operationId: "getEquipeById"
+      parameters:
+        - name: "equipeId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  /equipes/{equipe_id}/members:
+    get:
+      tags: [Equipes]
+      summary: "Récuperer la liste des candidatures d'une equipes en fonction du statut"
+      description : "Retourne les informations precises de chaque candidature"
+      operationId: "getEquipeMembers"
+      parameters:
+        - name: "equipe_id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "candidature_statut"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+            default: "EN_ATTENTE"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## CONVO
+  ## =========================================================
+
+  /messaging/conversations/start:
+    post:
+      summary: "POST messaging/conversations/start"
+      operationId: "startConversation"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/StartConversationRequest"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/conversations:
+    get:
+      summary: "GET messaging/conversations"
+      operationId: "getMyConversations"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/conversations/{conversationId}:
+    get:
+      summary: "GET messaging/conversations/{conversationId}"
+      operationId: "getConversationDetails"
+      parameters:
+        - name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/conversations/{conversationId}/messages:
+    post:
+      summary: "POST messaging/conversations/{conversationId}/messages"
+      operationId: "sendMessage"
+      parameters:
+        - name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+    get:
+      summary: "GET messaging/conversations/{conversationId}/messages"
+      operationId: "getConversationMessages"
+      parameters:
+        - name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/conversations/{conversationId}/messages/unread:
+    get:
+      summary: "GET messaging/conversations/{conversationId}/messages/unread"
+      operationId: "getUnreadMessages"
+      parameters:
+        - name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/conversations/{conversationId}/mark-read:
+    post:
+      summary: "POST messaging/conversations/{conversationId}/mark-read"
+      operationId: "markConversationAsRead"
+      parameters:
+        - name: "conversationId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /messaging/unread-count:
+    get:
+      summary: "GET messaging/unread-count"
+      operationId: "getTotalUnreadCount"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+  ## =========================================================
+  ## DEFI
+  ## =========================================================
+
+  /defis/create:
+    post:
+      summary: "POST defis/create"
+      operationId: "createDefi"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/Defi"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /defis/{id}:
+    get:
+      summary: "GET defis/{id}"
+      operationId: "getDefiById"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /defis/all:
+    get:
+      summary: "GET defis/all"
+      operationId: "getAllDefis"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ## --- AUTHENTICATION --- ##
+    RegisterParticipantRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        pseudo:
+          type: "string"
+        password:
+          type: "string"
+      required: [email, pseudo, password]
+
+    RegisterOrganisateurRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        pseudo:
+          type: "string"
+        password:
+          type: "string"
+        organisation:
+          type: "string"
+      required: [email, pseudo, password, organisation]
+
+    RegisterAdministrateurRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        pseudo:
+          type: "string"
+        password:
+          type: "string"
+      required: [email, pseudo, password]
+
+    LoginRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        password:
+          type: "string"
+      required: [email, password]
+
+    ## --- COMMENTS --- ##
+    CreateCommentRequest:
+      type: "object"
+      properties:
+        contenu:
+          type: "string"
+      required: [contenu]
+
+    ## --- CTF --- ##
+    CtfCreateRequest:
+      type: "object"
+      properties:
+        titre:
+          type: "string"
+        description:
+          type: "string"
+        lieu:
+          type: "string"
+      required: [titre, description, lieu]
+
+    ValidationCtfRequest:
+      type: "object"
+      properties:
+        isValid:
+          type: "boolean"
+      required: [isValid]
+
+    UpdateCtfRequest:
+      type: "object"
+      properties:
+        titre:
+          type: "string"
+        description:
+          type: "string"
+        lieu:
+          type: "string"
+
+    ## --- USERS --- ##
+    BanUserRequest:
+      type: "object"
+      properties:
+        userEmail:
+          type: "string"
+        banReason:
+          type: "string"
+      required: [userEmail, banReason]
+
+    ## --- EQUIPES --- ##
+    EquipeCreateRequest:
+      type: "object"
+      properties:
+        nomEquipe:
+          type: "string"
+      required: [nomEquipe]
+
+    CandidatureDecisionRequest:
+      type: "object"
+      properties:
+        candidatureId:
+          type: "integer"
+          format: "int64"
+        accept:
+          type: "boolean"
+      required: [candidatureId, accept]
+
+    KickMembreRequest:
+      type: "object"
+      properties:
+        equipeId:
+          type: "integer"
+          format: "int64"
+        membreEmail:
+          type: "string"
+      required: [equipeId, membreEmail]
+
+    NewChefEquipeRequest:
+      type: "object"
+      properties:
+        equipeId:
+          type: "integer"
+          format: "int64"
+        newChefEmail:
+          type: "string"
+      required: [equipeId, newChefEmail]
+
+    ## --- MESSAGING --- ##
+    StartConversationRequest:
+      type: "object"
+      properties:
+        recipientEmail:
+          type: "string"
+      required: [recipientEmail]
+    SendMessageRequest:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+      required: [ recipientEmail ]
+
+    ## --- DEFI --- ##
+    Defi:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        titre:
+          type: "string"
+        points:
+          type: "integer"
+          format: "int32"
+      required: [titre, points]
+
+    ## --- GENERIC RESPONSE --- ##
+    Response:
+      type: "object"
+      properties: {}

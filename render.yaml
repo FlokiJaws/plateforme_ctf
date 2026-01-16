@@ -1,0 +1,65 @@
+# ============================================
+# CONFIGURATION RENDER.COM
+# Déploiement gratuit avec PostgreSQL
+# ============================================
+
+services:
+  # Base de données PostgreSQL
+  - type: pserv
+    name: ctf-postgres
+    plan: free
+    region: frankfurt
+    databaseName: ctfdb
+    databaseUser: ctfuser
+    ipAllowList: []
+
+  # Application Web (Quarkus + React)
+  - type: web
+    name: plateforme-ctf
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    envVars:
+      # Base de données (lié automatiquement)
+      - key: QUARKUS_DATASOURCE_DB_KIND
+        value: postgresql
+
+      - key: QUARKUS_DATASOURCE_JDBC_URL
+        fromDatabase:
+          name: ctf-postgres
+          property: connectionString
+
+      - key: QUARKUS_DATASOURCE_USERNAME
+        fromDatabase:
+          name: ctf-postgres
+          property: user
+
+      - key: QUARKUS_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: ctf-postgres
+          property: password
+
+      # Hibernate
+      - key: QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION
+        value: update
+
+      # Port (Render utilise 10000 par défaut)
+      - key: QUARKUS_HTTP_PORT
+        value: 10000
+
+      # CORS (autoriser ton domaine Render)
+      - key: QUARKUS_HTTP_CORS_ORIGINS
+        value: https://plateforme-ctf.onrender.com
+
+      # Java Options
+      - key: JAVA_OPTS
+        value: "-Xmx512m -XX:MaxMetaspaceSize=128m"
+
+    healthCheckPath: /q/health/live
+
+    # Auto-deploy sur push
+    autoDeploy: true

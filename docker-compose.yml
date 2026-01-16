@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: ctf-postgres
+    environment:
+      POSTGRES_DB: ctfdb
+      POSTGRES_USER: ctfuser
+      POSTGRES_PASSWORD: ctfpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ctfuser -d ctfdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ctf-network
+
+  # Application Quarkus + React
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: ctf-app
+    environment:
+      # Configuration PostgreSQL
+      QUARKUS_DATASOURCE_DB_KIND: postgresql
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/ctfdb
+      QUARKUS_DATASOURCE_USERNAME: ctfuser
+      QUARKUS_DATASOURCE_PASSWORD: ctfpassword
+
+      # Hibernate
+      QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: update
+      QUARKUS_HIBERNATE_ORM_LOG_SQL: "true"
+
+      # CORS (pour dev local si besoin)
+      QUARKUS_HTTP_CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+
+      # Port
+      QUARKUS_HTTP_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ctf-network
+    restart: unless-stopped
+
+  # PgAdmin (optionnel - interface graphique pour PostgreSQL)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ctf-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ctf.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - ctf-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ctf-network:
+    driver: bridge

@@ -1,0 +1,34 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+01-Intro (2).pdf
+02-Servlets (1).pdf
+03-WS-REST (1).pdf
+04-EJB (1).pdf
+05-CDI (1).pdf
+06-REACT (1).pdf
+
+projet-2025-2026.pdf
+

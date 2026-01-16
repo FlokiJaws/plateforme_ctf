@@ -1,0 +1,30 @@
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        pseudo:
+          type: string
+      required:
+        - email
+        - password
+
+    RegisterResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Machine-readable result code
+          example: SUCCESS
+        message:
+          type: string
+          description: Human-readable message
+          example: User registered successfully.
+      required:
+        - code

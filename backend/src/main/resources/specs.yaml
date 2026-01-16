@@ -1,0 +1,772 @@
+openapi: "3.1.0"
+info:
+  title: CTF RootYou API
+  version: "1.0"
+tags:
+  - name: Authentification
+    description: APIs Servant a l'Authentification
+  - name: CTFs
+    description: APIs Servant a la gestion des CTFs
+  - name: Administration
+    description: APIs réservées aux administrateurs
+  - name: Participants
+    description: APIs réservées aux participants
+  - name: Comments
+    description: APIs pour la gestion des commentaires
+
+servers:
+  - url: http://localhost:8080
+    description: Serveur de Developpement Local
+paths:
+  # --- AUTHENTIFICATION ---
+  /auth/register/participant:
+    post:
+      tags:
+        - Authentification
+      summary: Enregistrer un nouveau participant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestParticipant'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid input
+
+  /auth/register/organisateur:
+    post:
+      tags:
+        - Authentification
+      summary: Enregistrer un nouvel organisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestOrganisateur'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid input
+
+  /auth/register/admin:
+    post:
+      tags:
+        - Authentification
+      summary: Enregistrer un nouvel administrateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestParticipant'
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid input
+          
+  /auth/login:
+    post:
+      tags:
+        - Authentification
+      summary: Login and get a JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # --- CTFS ---
+  /ctfs/{id}:
+    get:
+      tags:
+        - CTFs
+      summary: Get details of a specific CTF by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: CTF details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctfInfoResponse'
+        '404':
+          description: CTF not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ctfs/list/valide:
+    get:
+      tags:
+        - CTFs
+      summary: Récupérer la liste des CTFs avec le statut "VALIDE"
+      responses:
+        '200':
+          description: Liste de CTFs valides
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ctfInfoResponse'
+              # Ici on définit l'exemple qui sera renvoyé par Prism
+              example:
+                - id: 1
+                  titre: "Root-Me Start"
+                  description: "CTF d'initiation pour les débutants."
+                  lieu: "En ligne"
+                  nb_vues: 150
+                  statut: "VALIDE"
+                  organisateurPseudo: "miaw"
+                - id: 2
+                  titre: "CTF Université Limoges"
+                  description: "Compétition annuelle inter-promo 2025."
+                  lieu: "Campus La Borie"
+                  nb_vues: 42
+                  statut: "VALIDE"
+                  organisateurPseudo: "cyber"
+                - id: 3
+                  titre: "Nightly Hack"
+                  description: "Challenge expert nocturne."
+                  lieu: "Discord"
+                  nb_vues: 89
+                  statut: "VALIDE"
+                  organisateurPseudo: "waf"
+
+  /ctfs/list/en_attente:
+    get:
+      tags:
+        - CTFs
+      summary: Récupérer la liste des CTFs avec le statut "EN_ATTENTE"
+      responses:
+        '200':
+          description: Liste de CTFs en attente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ctfInfoResponse'
+              example:
+                - id: 1
+                  titre: "Root-Me Start"
+                  description: "CTF d'initiation pour les débutants."
+                  lieu: "En ligne"
+                  nb_vues: 150
+                  statut: "EN_ATTENTE"
+                  organisateurPseudo: "miaw"
+                - id: 2
+                  titre: "CTF Université Limoges"
+                  description: "Compétition annuelle inter-promo 2025."
+                  lieu: "Campus La Borie"
+                  nb_vues: 42
+                  statut: "EN_ATTENTE"
+                  organisateurPseudo: "cyber"
+                - id: 3
+                  titre: "Nightly Hack"
+                  description: "Challenge expert nocturne."
+                  lieu: "Discord"
+                  nb_vues: 89
+                  statut: "EN_ATTENTE"
+                  organisateurPseudo: "waf"
+
+  /ctfs/request_creation:
+    post:
+      tags:
+        - CTFs
+      summary: Request the creation of a new CTF
+      description: Soumettre une demande pour créer un nouveau CTF à l'administrateur. Requiert le role Organisateur
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ctf_request_creation'
+      responses:
+        '201':
+          description: CTF creation request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_creation_request_submitted_response'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /ctfs/{id}/validation:
+    post:
+      tags:
+        - CTFs
+      summary: Formulaire de validation de création d'un CTF
+      description: Formulaire à remplir par l'administrateur pour valider ou refuser la création d'un CTF
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ctfValidationRequest'
+      responses:
+        '200':
+          description: CTF creation request processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '404':
+          description: CTF creation request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ctfs/{id}/disable:
+    patch:
+      tags:
+        - CTFs
+      summary: Supprimer un CTF par son ID. Requiert au moins le role d'Organisateur.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: CTF supprimé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_success_delete_response'
+        '404':
+          description: CTF non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_not_found_error'
+        '409':
+          description: Conflit lors de la suppression du CTF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_error_user_currently_logged'
+
+  /ctfs/{id}/edit:
+    put:
+      tags:
+        - CTFs
+      summary: Editer les informations d'un CTF par son ID. Requiert au moins le role d'Organisateur.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ctf_edit'
+      responses:
+        '200':
+          description: CTF modifié avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_edit_success_response'
+        '404':
+          description: CTF non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_not_found_error'
+
+  /ctfs/{id_ctf}/comment:
+    post:
+      tags:
+        - CTFs
+      summary: Permet à un utilisateur(Participant) connecté de poster un commentaire sur un CTF
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id_ctf
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ctf_comment_request'
+      responses:
+        '201':
+          description: Commentaire posté avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_comment_creation_success_response'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  ## --- COMMENTS ---
+
+  /comments/new/{ctfId}:
+    post:
+      tags:
+        - Comments
+      summary: "POST comments/new/{ctfId}"
+      operationId: "addCommentToCtf"
+      parameters:
+        - name: "ctfId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /comments/ctf/{ctfId}:
+    get:
+      tags:
+        - Comments
+      summary: "GET comments/ctf/{ctfId}"
+      operationId: "getCommentsForCtf"
+      parameters:
+        - name: "ctfId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+  /comments/user/{userEmail}:
+    get:
+      tags:
+        - Comments
+      summary: "GET comments/user/{userEmail}"
+      operationId: "getCommentsForUser"
+      parameters:
+        - name: "userEmail"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Response"
+
+
+  ## --- ADMIN ---
+
+  /admin/ban/{id}:
+    post:
+      tags:
+        - Administration
+      summary: Bannir un utilisateur par son ID. Requiert le role d'Administrateur.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Raison du bannissement
+              required: [reason]
+      responses:
+        '200':
+          description: User successfully banned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/admin_successful_ban'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/admin_ban_user_not_found'
+
+  ## --- PARTICIPANTS ---
+
+  /user/joined_ctf/{id}:
+    post:
+      tags:
+        - Participants
+      summary: Permet à un utilisateur (Participant) connecté de rejoindre un CTF
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Utilisateur a rejoint le CTF avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_joined_ctf_successfully_response'
+        '404':
+          description: CTF non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_not_found_error'
+
+  /user/leave_ctf/{id}:
+    post:
+      tags:
+        - Participants
+      summary: Permet à un utilisateur (Participant) connecté de quitter un CTF
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Utilisateur a quitté le CTF avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_left_ctf_successfully_response'
+        '404':
+          description: CTF non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ctf_not_found_error'
+
+  ## TODO : Gerer les Defis
+
+  /user/get_score/{id}:
+    get:
+      tags:
+        - Participants
+      summary: Récuperer le score d'un utilisateur par son ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Score de l'utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_score_response'
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_not_found_error'
+
+  /user/highest_score:
+    get:
+      tags:
+        - Participants
+      summary: Récuperer l'utilisateur avec le score le plus élevé
+      responses:
+        '200':
+          description: Utilisateur avec le score le plus élevé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user_highest_score_response'
+        '404':
+          description: Aucun utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/no_players'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- AUTH SCHEMAS ---
+    RegisterRequestParticipant:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        pseudo: { type: string }
+      required: [email, password]
+
+    RegisterRequestOrganisateur:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        pseudo: { type: string }
+        password: { type: string, minLength: 8 }
+        organisation: { type: string }
+      required: [email, password, organisation, pseudo]
+
+
+    RegisterResponse:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: User registered successfully. }
+
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+      required: [email, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken: { type: string, example: eyJhbGciOiJIUzI1NiIsIn... }
+        tokenType: { type: string, example: Bearer }
+        expiresIn: { type: integer, example: 3600 }
+    
+    ErrorResponse:
+      type: object
+      properties:
+        code: { type: string, example: ERROR }
+        message: { type: string }
+
+
+
+    # --- CTF SCHEMA ---
+    ctfInfoResponse:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        titre: { type: string, example: Challenge }
+        description: { type: string, example: Description du CTF }
+        lieu: { type: string, example: En ligne }
+        nbVues: { type: integer, example: 120 }
+        organisateur: { type: string, example: miaw }
+
+    ctf_request_creation:
+      type: object
+      properties:
+        titre: { type: string }
+        description: { type: string }
+        lieu: { type: string }
+
+    ctfValidationRequest:
+      type: object
+      properties:
+        isValid: { type: boolean }
+      required: [ isValid ]
+
+    ctf_success_delete_response:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: CTF supprimé avec succès. }
+
+    ctf_not_found_error:
+      type: object
+      properties:
+        code: { type: string, example: ERROR }
+        message: { type: string, example: CTF non trouvé. }
+
+    ctf_error_user_currently_logged:
+      type: object
+      properties:
+        code: { type: string, example: ERROR }
+        message: { type: string, example: Impossible de supprimer le CTF car des utilisateurs sont actuellement connectés. }
+
+    ctf_edit:
+      type: object
+      properties:
+        titre: { type: string, example: Nouveau Titre CTF }
+        description: { type: string, example: Nouvelle description du CTF }
+        lieu: { type: string, example: Nouveau lieu du CTF }
+      required: [ titre, description, lieu ]
+
+    ctf_edit_success_response:
+      type: object
+      properties:
+          code: { type: string, example: SUCCESS }
+          message: { type: string, example: CTF modifié avec succès. }
+
+    ctf_comment_request:
+      type: object
+      properties:
+        comment: { type: string }
+      required: [ comment ]
+
+    ctf_creation_request_submitted_response:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: Votre demande de création de CTF a été soumise avec succès. }
+
+    ctf_comment_creation_success_response:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: Commentaire posté avec succès. }
+
+    # --- ADMIN SCHEMAS ---
+    admin_successful_ban:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: L'utilisateur a été banni avec succès. }
+
+    admin_ban_user_not_found:
+      type: object
+      properties:
+        code: { type: string, example: ERROR }
+        message: { type: string, example: Utilisateur non trouvé. }
+
+    # --- PARTICIPANT SCHEMAS ---
+    user_joined_ctf_successfully_response:
+      type: object
+      properties:
+        code: { type: string, example: SUCCESS }
+        message: { type: string, example: Vous avez rejoint le CTF avec succès. }
+
+    user_left_ctf_successfully_response:
+      type: object
+      properties:
+          code: { type: string, example: SUCCESS }
+          message: { type: string, example: Vous avez quitté le CTF avec succès. }
+
+    user_score_response:
+      type: object
+      properties:
+        score: { type: integer }
+
+    user_not_found_error:
+      type: object
+      properties:
+        code: { type: string, example: ERROR }
+        message: { type: string, example: Utilisateur non trouvé. }
+
+    user_highest_score_response:
+      type: object
+      properties:
+        username: { type: string, example: Marley }
+        score: { type: integer, example: 9500 }
+
+    no_players:
+      type: object
+      properties:
+          code: { type: string, example: ERROR }
+          message: { type: string, example: Aucun utilisateur trouvé. }
+
+    # --- COMMENTS SCHEMAS ---
+    CreateCommentRequest:
+      type: "object"
+      properties:
+        contenu:
+          type: "string"
+          nullable: true
+    Response:
+      type: "object"
+      properties: { }

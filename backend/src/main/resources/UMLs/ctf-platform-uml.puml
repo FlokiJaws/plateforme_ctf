@@ -1,0 +1,761 @@
+@startuml CTF Platform - Architecture complète
+!define CONTROLLER_COLOR #E8F5E9
+!define SERVICE_COLOR #E3F2FD
+!define REPOSITORY_COLOR #FFF3E0
+!define ENTITY_COLOR #FCE4EC
+!define DTO_COLOR #F3E5F5
+!define EXCEPTION_COLOR #FFEBEE
+!define ENUM_COLOR #E0F2F1
+
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+
+' ===============================================
+' COUCHE CONTROLLERS (API REST)
+' ===============================================
+package "Controllers Layer" CONTROLLER_COLOR {
+    class AuthController {
+        - authService: AuthService
+        - jwtService: JwtService
+        + registerParticipant(body): Response
+        + registerOrganisateur(body): Response
+        + registerAdmin(body): Response
+        + login(body): Response
+    }
+    
+    class CtfController {
+        - ctfService: CtfService
+        + requestCreationCtf(request): Response
+        + getCtfById(id): Response
+        + getAllValidCtfs(): Response
+        + getAllPendingCtfs(): Response
+        + validationCtf(id, request): Response
+        + disableCtf(id): Response
+        + modifyCtf(id, request): Response
+        + joinCtf(id): Response
+        + leaveCtf(id): Response
+        + getCtfParticipations(id, filter): Response
+    }
+    
+    class CommentaireController {
+        - commentaireService: CommentaireService
+        + addCommentToCtf(ctfId, request): Response
+        + getCommentsForCtf(ctfId): Response
+        + getCommentsForUser(userEmail): Response
+    }
+    
+    class DefiController {
+        - defiService: DefiService
+        + createDefi(defi): Response
+        + getDefiById(id): Response
+        + getAllDefis(): Response
+    }
+    
+    class EquipeController {
+        - equipeService: EquipeService
+        + createEquipe(request): Response
+        + joinEquipe(equipeId): Response
+        + respondToRequest(request): Response
+        + leaveEquipe(equipeId): Response
+        + kickMembre(request): Response
+        + designateNewChef(request): Response
+        + getAllEquipes(): Response
+        + getEquipeById(equipeId): Response
+        + getEquipeMembers(equipeId, statut): Response
+    }
+    
+    class MessagingController {
+        - messagingService: MessagingService
+        + startConversation(request): Response
+        + getMyConversations(): Response
+        + getConversationDetails(conversationId): Response
+        + sendMessage(conversationId, request): Response
+        + getConversationMessages(conversationId): Response
+        + getUnreadMessages(conversationId): Response
+        + markConversationAsRead(conversationId): Response
+        + getTotalUnreadCount(): Response
+    }
+    
+    class ParticipantController {
+        - participantService: ParticipantService
+        + getMyParticipations(filter): Response
+    }
+    
+    class UserController {
+        - userService: UserService
+        + banUser(body): Response
+        + getAllUsersForAdmin(): Response
+        + getAllUsersForPublic(): Response
+        + getAllOrganisateurs(): Response
+    }
+}
+
+' ===============================================
+' COUCHE SERVICES (LOGIQUE MÉTIER)
+' ===============================================
+package "Services Layer" SERVICE_COLOR {
+    class AuthService {
+        - userRepository: UserRepository
+        - hashPassword(password): String
+        - checkPassword(rawPassword, hashed): boolean
+        + registerParticipant(email, pseudo, password)
+        + registerOrganisateur(email, pseudo, password, org)
+        + registerAdmin(email, pseudo, password)
+        + authenticate(email, password): User
+    }
+    
+    class CtfService {
+        - ctfRepository: CtfRepository
+        - organisateurRepository: OrganisateurRepository
+        - userRepository: UserRepository
+        - participationRepository: ParticipationRepository
+        + createCtf(orgEmail, request)
+        + getCtfById(id): CtfInfoResponse
+        + getAllCtfsByStatut(statut): List<CtfInfoResponse>
+        + ctfValidationAdmin(id, validate)
+        + disableCtf(id, email, isAdmin)
+        + modifyCtf(id, isAdmin, email, request): CtfInfoResponse
+        + joinCtfAsSolo(ctfId, participantEmail)
+        + leaveCtf(ctfId, participantEmail)
+        + getParticipationsByFilter(ctfId, filter, email, isAdmin): List
+    }
+    
+    class CommentaireService {
+        - commentsRepository: CommentsRepository
+        - ctfRepository: CtfRepository
+        - userRepository: UserRepository
+        + getCommentsForCtf(ctfId): List<CommentContentResponse>
+        + getCommentsForUser(userEmail): List<CommentContentResponse>
+        + addCommentToCtf(ctfId, userEmail, contenu)
+    }
+    
+    class DefiService {
+        - defiRepository: DefiRepository
+        + createDefi(titre, points)
+        + getDefiDetails(defiId): DefiDetailsResponse
+        + getAllDefis(): List<DefiDetailsResponse>
+    }
+    
+    class EquipeService {
+        - equipeRepository: EquipeRepository
+        - userRepository: UserRepository
+        - candidatureRepository: CandidatureRepository
+        + createEquipe(nomEquipe, emailChef)
+        + requestToJoinEquipe(equipeId, participantEmail)
+        + leaveEquipe(equipeId, participantEmail)
+        + kick(equipeId, participantEmail, kickedByEmail)
+        + respondToRequest(requestId, accept, decidedByEmail)
+        + changeChefEquipe(oldChef, newChef, equipeId)
+        + getAllEquipes(): List<EquipeListResponse>
+        + getEquipeDetails(equipeId): EquipeDetailsResponse
+        + getEquipeMembersDetails(equipeId, statut, email, isAdmin): List
+    }
+    
+    class MessagingService {
+        - conversationRepository: ConversationRepository
+        - messageRepository: MessageRepository
+        - userRepository: UserRepository
+        - validateCanContact(sender, recipient)
+        + startConversation(senderEmail, recipientEmail): Long
+        + sendMessage(conversationId, senderEmail, content): MessageResponse
+        + getMyConversations(userEmail): List<ConversationListResponse>
+        + getConversationDetails(conversationId, userEmail): ConversationDetailsResponse
+        + getConversationMessages(conversationId, userEmail): List<MessageResponse>
+        + markConversationAsRead(conversationId, userEmail)
+        + getTotalUnreadCount(userEmail): int
+        + getUnreadMessages(conversationId, userEmail): List<MessageResponse>
+    }
+    
+    class ParticipantService {
+        - participationRepository: ParticipationRepository
+        - userRepository: UserRepository
+        + getParticipationsByFilter(email, filter): List<ParticipationInfoResponse>
+    }
+    
+    class UserService {
+        - userRepository: UserRepository
+        + banUser(email, reason)
+        + getAllUsersForAdmin(): List<UserInfoAdminResponse>
+        + getAllUsersForPublic(): List<ParticipantInfoPublicResponse>
+        + getAllOrganisateurs(): List<UserPublicDetails>
+    }
+    
+    class JwtService {
+        + generateToken(email, pseudo, role): String
+    }
+}
+
+' ===============================================
+' COUCHE REPOSITORIES (ACCÈS AUX DONNÉES)
+' ===============================================
+package "Repositories Layer" REPOSITORY_COLOR {
+    class UserRepository {
+        - em: EntityManager
+        + persist(user)
+        + findAllUsers(): List<User>
+        + findAllParticipantUsers(): List<Participant>
+        + findAllOrganisateurUsers(): List<Organisateur>
+        + findUserByEmail(email): User
+        + findParticipantByEmail(email): Participant
+        + existsByEmail(email): boolean
+        + existsByPseudo(pseudo): boolean
+    }
+    
+    class CtfRepository {
+        - em: EntityManager
+        + persist(ctf)
+        + findById(id): CTF
+        + findAllByStatut(statut): List<CTF>
+    }
+    
+    class CommentsRepository {
+        - em: EntityManager
+        + persist(comment)
+        + findAllByCtfId(ctfId): List<CommentaireCtf>
+        + findAllByUserEmail(userEmail): List<CommentaireCtf>
+    }
+    
+    class DefiRepository {
+        - em: EntityManager
+        + persist(defi)
+        + findById(id): Defi
+        + findByTitle(title): Defi
+        + findAllDefis(): List<Defi>
+    }
+    
+    class EquipeRepository {
+        - em: EntityManager
+        + persist(equipe)
+        + existsByNomEquipe(nom): boolean
+        + findById(id): Equipe
+        + isChefEquipe(equipeId, email): boolean
+        + findAllEquipes(): List<Equipe>
+        + countActiveMembresInEquipe(equipeId): int
+    }
+    
+    class CandidatureRepository {
+        - em: EntityManager
+        + persist(candidature)
+        + findAcceptedCandidatureByEquipeIdAndParticipantEmail(): CandidatureMembre
+        + findPendingCandidatureByEquipeIdAndParticipantEmail(): CandidatureMembre
+        + findAcceptedCondidatureByParticipantEmail(email): CandidatureMembre
+        + findAcceptedCandidaturesByEquipeId(equipeId): List<CandidatureMembre>
+        + findCandidatureById(id): CandidatureMembre
+        + findCandidaturesByEquipeIdAndStatutCandidature(): List<CandidatureMembre>
+    }
+    
+    class ParticipationRepository {
+        - em: EntityManager
+        + persist(participation)
+        + findActiveParticipationByParticipantAndCtf(): ParticipationSoloCtf
+        + hasParticipantCompletedCtf(ctfId, email): boolean
+        + findActiveParticipationsByParticipantEmail(email): List
+        + findInactiveParticipationsByParticipantEmail(email): List
+        + findAllParticipationsByParticipantEmail(email): List
+        + findActiveParticipationsByCtfId(ctfId): List
+        + findInactiveParticipationsByCtfId(ctfId): List
+        + findAllParticipationsByCtfId(ctfId): List
+    }
+    
+    class ConversationRepository {
+        - em: EntityManager
+        + persist(conversation)
+        + findById(id): Conversation
+        + findConversationBetweenUsers(email1, email2): Conversation
+        + findAllConversationsByUserEmail(email): List<Conversation>
+    }
+    
+    class MessageRepository {
+        - em: EntityManager
+        + persist(message)
+        + findById(id): Message
+        + findAllMessagesByConversationId(id): List<Message>
+        + countUnreadMessagesByConversationAndRecipient(): int
+        + markMessagesAsReadByRecipient(conversationId, email)
+    }
+    
+    class OrganisateurRepository {
+        - em: EntityManager
+        + existsByEmail(email): boolean
+        + getReference(email): Organisateur
+    }
+}
+
+' ===============================================
+' COUCHE ENTITIES (MODÈLE DE DOMAINE)
+' ===============================================
+package "Entities Layer" ENTITY_COLOR {
+    abstract class User {
+        # email: String {id}
+        # pseudo: String
+        # password: String
+        # role: Role
+        # banned: boolean
+        # banReason: String
+        # banDate: Instant
+        + getters/setters
+    }
+    
+    class Participant {
+        - score: int
+        + getScore(): int
+    }
+    
+    class Organisateur {
+        - organisation: String
+    }
+    
+    class Administrateur {
+    }
+    
+    class CTF {
+        - id: Long {id}
+        - titre: String
+        - description: String
+        - lieu: String
+        - nbVues: int
+        - statut: CtfStatut
+        - contact: Organisateur
+        + getters/setters
+    }
+    
+    class Defi {
+        - id: Long {id}
+        - titre: String
+        - points: int
+        + getters/setters
+    }
+    
+    class Equipe {
+        - id: Long {id}
+        - nom: String
+        - logoUrl: String
+        - chef_equipe: Participant
+        - membres: List<CandidatureMembre>
+        + getters/setters
+    }
+    
+    class CandidatureMembre {
+        - id: Long {id}
+        - equipe: Equipe
+        - participant: Participant
+        - statut: StatutCandidature
+        - createdAt: Instant
+        - decidedAt: Instant
+        - endedAt: Instant
+        - decidedBy: Participant
+        - endedBy: Participant
+        + createChefEquipe(equipe, chef): CandidatureMembre
+        + getters/setters
+    }
+    
+    class ParticipationSoloCtf {
+        - id: Long {id}
+        - participant: Participant
+        - ctf: CTF
+        - joinedAt: Instant
+        - completedAt: Instant
+        - leftAt: Instant
+        + join()
+        + getters/setters
+    }
+    
+    class ParticipationEquipeCtf {
+        - id: Long {id}
+        - equipe: Equipe
+        - ctf: CTF
+        - joinedAt: Instant
+        - completedAt: Instant
+        - leftAt: Instant
+        + join()
+        + getters/setters
+    }
+    
+    class CommentaireCtf {
+        - id: Long {id}
+        - ctf: CTF
+        - user: User
+        - contenu: String
+        - date: Instant
+        + getters/setters
+    }
+    
+    class Conversation {
+        - id: Long {id}
+        - user1: User
+        - user2: User
+        - createdAt: Instant
+        - lastMessageAt: Instant
+        + getOtherUser(email): User
+        + getters/setters
+    }
+    
+    class Message {
+        - id: Long {id}
+        - conversation: Conversation
+        - sender: User
+        - content: String
+        - sentAt: Instant
+        - isRead: boolean
+        + getters/setters
+    }
+    
+    ' Relations entre entités
+    User <|-- Participant
+    User <|-- Organisateur
+    User <|-- Administrateur
+    
+    CTF "*" -- "1" Organisateur : contact
+    Equipe "1" -- "1" Participant : chef_equipe
+    Equipe "1" -- "*" CandidatureMembre : membres
+    CandidatureMembre "*" -- "1" Participant : participant
+    CandidatureMembre "*" -- "0..1" Participant : decidedBy
+    CandidatureMembre "*" -- "0..1" Participant : endedBy
+    ParticipationSoloCtf "*" -- "1" Participant
+    ParticipationSoloCtf "*" -- "1" CTF
+    ParticipationEquipeCtf "*" -- "1" Equipe
+    ParticipationEquipeCtf "*" -- "1" CTF
+    CommentaireCtf "*" -- "1" User
+    CommentaireCtf "*" -- "1" CTF
+    Conversation "*" -- "1" User : user1
+    Conversation "*" -- "1" User : user2
+    Message "*" -- "1" Conversation
+    Message "*" -- "1" User : sender
+}
+
+' ===============================================
+' COUCHE ENUMS
+' ===============================================
+package "Enums" ENUM_COLOR {
+    enum Role {
+        ADMINISTRATEUR
+        ORGANISATEUR
+        PARTICIPANT
+    }
+    
+    enum CtfStatut {
+        EN_ATTENTE
+        ACTIF
+        INACTIF
+    }
+    
+    enum StatutCandidature {
+        EN_ATTENTE
+        ACCEPTE
+        REFUSE
+        QUITTE
+        EXCLU
+    }
+    
+    enum ParticipationFilter {
+        ACTIVE
+        INACTIVE
+        ALL
+    }
+}
+
+' ===============================================
+' COUCHE DTOs
+' ===============================================
+package "DTOs Layer" DTO_COLOR {
+    class ErrorResponse {
+        + code: String
+        + message: String
+    }
+    
+    package "Auth DTOs" {
+        class LoginRequest {
+            + email: String
+            + password: String
+        }
+        class RegisterParticipantRequest {
+            + email: String
+            + pseudo: String
+            + password: String
+        }
+        class RegisterOrganisateurRequest {
+            + email: String
+            + pseudo: String
+            + password: String
+            + organisation: String
+        }
+        class RegisterAdministrateurRequest {
+            + email: String
+            + pseudo: String
+            + password: String
+        }
+    }
+    
+    package "CTF DTOs" {
+        class CtfCreateRequest {
+            - titre: String
+            - description: String
+            - lieu: String
+        }
+        class CtfInfoResponse {
+            + id: Long
+            + titre: String
+            + description: String
+            + lieu: String
+            + nbVues: int
+            + statut: String
+            + organisateurPseudo: String
+        }
+        class UpdateCtfRequest {
+            + titre: String
+            + description: String
+            + lieu: String
+        }
+        class ValidationCtfRequest {
+            + isValid: boolean
+        }
+    }
+    
+    package "Equipe DTOs" {
+        class EquipeCreateRequest {
+            + nomEquipe: String
+        }
+        class EquipeDetailsResponse {
+            + equipeId: Long
+            + nomEquipe: String
+            + chefEquipeEmail: String
+            + participants: List<UserPublicDetails>
+        }
+        class EquipeListResponse {
+            + equipeId: Long
+            + nomEquipe: String
+            + chefEquipeEmail: String
+            + nombreMembres: int
+        }
+        class CandidatureDecisionRequest {
+            + candidatureId: Long
+            + accept: boolean
+        }
+        class EquipeCandidatureDetails {
+            + candidatureId: Long
+            + equipeId: Long
+            + equipeNom: String
+            + chefEquipeEmail: String
+            + participantEmail: String
+            + participantPseudo: String
+            + statut: StatutCandidature
+            + createdAt: Instant
+            + decidedAt: Instant
+            + endedAt: Instant
+            + decidedByEmail: String
+            + endedByEmail: String
+        }
+    }
+    
+    package "Messaging DTOs" {
+        class StartConversationRequest {
+            + recipientEmail: String
+        }
+        class SendMessageRequest {
+            + content: String
+        }
+        class MessageResponse {
+            + id: Long
+            + senderEmail: String
+            + senderPseudo: String
+            + content: String
+            + sentAt: Instant
+            + isRead: boolean
+        }
+        class ConversationListResponse {
+            + conversationId: Long
+            + otherUserEmail: String
+            + otherUserPseudo: String
+            + otherUserRole: String
+            + lastMessageAt: Instant
+            + unreadCount: int
+        }
+        class ConversationDetailsResponse {
+            + conversationId: Long
+            + otherUserEmail: String
+            + otherUserPseudo: String
+            + otherUserRole: String
+            + createdAt: Instant
+            + messages: List<MessageResponse>
+        }
+    }
+    
+    package "User DTOs" {
+        class UserPublicDetails {
+            + pseudo: String
+            + email: String
+        }
+        class ParticipantInfoPublicResponse {
+            + pseudo: String
+            + score: int
+        }
+        class UserInfoAdminResponse {
+            + email: String
+            + pseudo: String
+            + role: String
+            + banned: boolean
+            + banReason: String
+            + banDate: String
+        }
+        class BanUserRequest {
+            + userEmail: String
+            + banReason: String
+        }
+    }
+    
+    package "Other DTOs" {
+        class CommentContentResponse {
+            + id: Long
+            + userPseudo: String
+            + ctfTitre: String
+            + contenu: String
+            + date: String
+        }
+        class DefiDetailsResponse {
+            + id: Long
+            + titre: String
+            + points: int
+        }
+        class ParticipationInfoResponse {
+            + ctfId: Long
+            + ctfTitre: String
+            + ctfDescription: String
+            + ctfLieu: String
+            + participantPseudo: String
+            + participantEmail: String
+            + joinedAt: Instant
+            + leftAt: Instant
+            + completedAt: Instant
+        }
+    }
+}
+
+' ===============================================
+' COUCHE EXCEPTION HANDLERS
+' ===============================================
+package "Exception Handlers" EXCEPTION_COLOR {
+    class ApiException {
+        + status: int
+        + code: String
+        + ApiException(status, code, message)
+    }
+    
+    class ApiExceptionMapper {
+        + toResponse(exception): Response
+    }
+    
+    class ThrowableMapper {
+        + toResponse(exception): Response
+    }
+    
+    ApiException ..> ErrorResponse : creates
+    ApiExceptionMapper ..> ApiException : handles
+    ApiExceptionMapper ..> ErrorResponse : creates
+    ThrowableMapper ..> ErrorResponse : creates
+}
+
+' ===============================================
+' RELATIONS ENTRE COUCHES
+' ===============================================
+
+' Controllers --> Services
+AuthController --> AuthService
+AuthController --> JwtService
+CtfController --> CtfService
+CommentaireController --> CommentaireService
+DefiController --> DefiService
+EquipeController --> EquipeService
+MessagingController --> MessagingService
+ParticipantController --> ParticipantService
+UserController --> UserService
+
+' Services --> Repositories
+AuthService --> UserRepository
+CtfService --> CtfRepository
+CtfService --> OrganisateurRepository
+CtfService --> UserRepository
+CtfService --> ParticipationRepository
+CommentaireService --> CommentsRepository
+CommentaireService --> CtfRepository
+CommentaireService --> UserRepository
+DefiService --> DefiRepository
+EquipeService --> EquipeRepository
+EquipeService --> UserRepository
+EquipeService --> CandidatureRepository
+MessagingService --> ConversationRepository
+MessagingService --> MessageRepository
+MessagingService --> UserRepository
+ParticipantService --> ParticipationRepository
+ParticipantService --> UserRepository
+UserService --> UserRepository
+
+' Repositories --> Entities
+UserRepository --> User
+CtfRepository --> CTF
+CommentsRepository --> CommentaireCtf
+DefiRepository --> Defi
+EquipeRepository --> Equipe
+CandidatureRepository --> CandidatureMembre
+ParticipationRepository --> ParticipationSoloCtf
+ConversationRepository --> Conversation
+MessageRepository --> Message
+OrganisateurRepository --> Organisateur
+
+' Services use Enums
+CtfService ..> CtfStatut
+CtfService ..> ParticipationFilter
+EquipeService ..> StatutCandidature
+MessagingService ..> Role
+ParticipantService ..> ParticipationFilter
+
+' Entities use Enums
+User ..> Role
+CTF ..> CtfStatut
+CandidatureMembre ..> StatutCandidature
+
+' Services throw Exceptions
+AuthService ..> ApiException : throws
+CtfService ..> ApiException : throws
+CommentaireService ..> ApiException : throws
+DefiService ..> ApiException : throws
+EquipeService ..> ApiException : throws
+MessagingService ..> ApiException : throws
+ParticipantService ..> ApiException : throws
+UserService ..> ApiException : throws
+
+note top of "Controllers Layer"
+  Couche API REST
+  - Gestion des endpoints HTTP
+  - Validation des requêtes
+  - Sécurité JWT
+end note
+
+note top of "Services Layer"
+  Couche Logique Métier
+  - Règles métier
+  - Orchestration
+  - Transactions
+end note
+
+note top of "Repositories Layer"
+  Couche Accès aux Données
+  - Requêtes JPA/JPQL
+  - Abstraction de la BDD
+end note
+
+note top of "Entities Layer"
+  Couche Modèle de Domaine
+  - Entités JPA
+  - Relations entre entités
+  - Logique métier simple
+end note
+
+note top of "DTOs Layer"
+  Couche Transfert de Données
+  - Requests/Responses API
+  - Séparation présentation/domaine
+end note
+
+@enduml
