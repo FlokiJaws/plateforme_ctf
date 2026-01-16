@@ -33,23 +33,15 @@ FROM gradle:8.5-jdk21 AS backend-builder
 
 WORKDIR /backend
 
-# Copier les fichiers Gradle
-COPY backend/gradle gradle
-COPY backend/gradlew .
-COPY backend/build.gradle .
-COPY backend/settings.gradle .
-
-# Télécharger les dépendances (layer de cache)
-RUN ./gradlew dependencies --no-daemon || true
-
-# Copier le code source backend
-COPY backend/src src/
+# Copier tout le backend (y compris gradle wrapper si présent)
+COPY backend/ ./
 
 # Copier le frontend buildé dans les resources statiques de Quarkus
 COPY --from=frontend-builder /frontend/dist ./src/main/resources/META-INF/resources/
 
 # Build Quarkus en mode JVM optimisé
-RUN ./gradlew build -Dquarkus.package.type=uber-jar -x test --no-daemon
+# Utiliser gradle directement (pas gradlew) car on utilise l'image gradle officielle
+RUN gradle build -Dquarkus.package.type=uber-jar -x test --no-daemon
 
 # --------------------------------------------
 # STAGE 3 : IMAGE FINALE (Runtime)
