@@ -41,7 +41,7 @@ COPY --from=frontend-builder /frontend/dist ./src/main/resources/META-INF/resour
 
 # Build Quarkus en mode JVM optimisé
 # Utiliser gradle directement (pas gradlew) car on utilise l'image gradle officielle
-RUN gradle build -Dquarkus.package.type=uber-jar -x test --no-daemon
+RUN gradle build -x test --no-daemon
 
 # --------------------------------------------
 # STAGE 3 : IMAGE FINALE (Runtime)
@@ -54,9 +54,9 @@ WORKDIR /app
 RUN addgroup -g 1001 quarkus && \
     adduser -D -u 1001 -G quarkus quarkus
 
-# Copier le uber-jar depuis le builder
+# Copier les fichiers buildés depuis le builder
 COPY --from=backend-builder --chown=quarkus:quarkus \
-    /backend/build/projet_ctf-*-runner.jar /app/app.jar
+    /backend/build/quarkus-app/ /app/
 
 # Variables d'environnement par défaut
 ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
@@ -73,4 +73,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/q/health/live || exit 1
 
 # Lancer l'application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/quarkus-run.jar"]
