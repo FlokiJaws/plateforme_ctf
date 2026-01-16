@@ -29,7 +29,7 @@ RUN npm run build
 # --------------------------------------------
 # STAGE 2 : BUILD BACKEND (Quarkus + Gradle)
 # --------------------------------------------
-FROM gradle:8.5-jdk21 AS backend-builder
+FROM gradle:8.11-jdk21 AS backend-builder
 
 WORKDIR /backend
 
