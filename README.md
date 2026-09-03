@@ -4,7 +4,7 @@ Projet réalisé dans le cadre du cours **Applications Distribuées JEE** (M1 In
 
 ## 🔗 Démo en ligne
 
-**[Voir la démo](URL_DU_SITE_À_COMPLÉTER)**
+**[Voir la démo]([URL_DU_SITE_À_COMPLÉTER](https://plateforme-ctf.onrender.com/))**
 
 ⚠️ Hébergé sur le tier gratuit Render — le premier chargement peut prendre 30 à 50 secondes le temps que le service se réveille.
 
