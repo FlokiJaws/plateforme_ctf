@@ -54,10 +54,6 @@ plateforme_ctf/
 └── docker-compose.yml
 ```
 
-## Réinitialiser les données de démonstration
-
-Si la base de données Render venait à expirer ou être supprimée (fréquent sur le tier gratuit après une longue période d'inactivité), voir **[`RECOVERY.md`](RECOVERY.md)** pour la procédure complète de restauration, avec le script SQL prêt à l'emploi.
-
 ## Auteurs
 
 Marley Catillon ([@FlokiJaws](https://github.com/FlokiJaws)) — projet réalisé en binôme
