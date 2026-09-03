@@ -42,14 +42,6 @@ Application inspirée de plateformes comme [Root-Me](https://www.root-me.org), [
 - **Base de données** : PostgreSQL (hébergée sur Render)
 - **Conteneurisation** : Docker / Docker Compose
 
-## Lancer le projet en local
-
-```bash
-git clone https://github.com/FlokiJaws/plateforme_ctf.git
-cd plateforme_ctf
-cp .env.example .env   # à compléter avec vos variables d'environnement
-docker-compose up --build
-```
 
 Une fois lancé, se référer à `docker-compose.yml` pour les ports exposés du frontend et du backend.
 
